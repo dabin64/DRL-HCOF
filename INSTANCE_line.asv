@@ -1,0 +1,114 @@
+classdef INSTANCE_line < handle    
+    properties(SetAccess = private)
+        Task_N;
+        CT;
+        Task_time;
+        Precedence;
+        % Ave_f;
+        % Task_freq;
+        % Se_pos;
+        % Mi_pos;
+        % Add_fac;
+        % Rep_act;
+        % Optimum_m;
+        % Pretask_set;
+        % Pretask_imd_set;
+        % Foltask_set;
+        % Foltask_N;
+        % Foltask_imd_set;
+        % Foltask_imd_N;
+        % Pre_matix;
+        % Ear_station;
+        % Lat_station;
+        % Slack_task;
+        % PW;
+        % Tds;
+        lineperf;
+        % lineconfi;
+    end
+    methods
+        function obj = INSTANCE_line(fitness,DC,NDC,varargin)
+           global  lineperf lineconfi plan
+           cd('D:\bibliography\小论文1\双层优化\实验\text\新数据')
+            %读取测试例子中的每行数据
+            ffid = fopen(varargin{1,1},'r');
+            cd('D:\bibliography\小论文1\双层优化\实验\text\线再平衡结果\方案')
+            addpath(genpath(cd));
+            tline = fgetl(ffid);
+            i = 1;
+            while feof(ffid) == 0
+                tline2{i,1} = fgetl(ffid);
+                i = i+1;
+            end
+            tline1            = [tline;tline2];
+            obj.Task_N        = str2num( tline1{2,1});   % 任务数量
+            Task_N            = str2num( tline1{2,1});
+            for i = 1:length(tline1)
+                switch tline1{i,1}
+                    case '<cycle time>'
+                        cycle_time_n = i;
+                    case '<task times>'
+                        task_time_n  = i;
+                    case '<precedence relations>'
+                        precedence_relations_n = i;
+                    % case '<average force>'
+                    %     average_force_n = i;
+                    % case '<frequency tasks>'
+                    %     frequency_tasks_n  = i;
+                    % case '<severe postures>'
+                    %     severe_postures_n = i;
+                    % case '<mild postures>'
+                    %     mild_postures_n = i;
+                    % case '<additional factor>'
+                    %     additional_factor_n  = i;
+                    % case '<repetitive actions>'
+                    %     repetitive_actions_n  = i;
+                    % case '<optimum m>'
+                    %     optimum_m_n  = i;
+                    case '<end>'
+                        end_n  = i;
+                end
+            end
+            %读取 cycle time
+            obj.CT                    =  str2num(tline1{cycle_time_n+1,1});
+            % obj.Optimum_m             =  str2num(tline1{optimum_m_n+1,1});
+            for i = 1:Task_N
+                Task_time(i,:)        = str2num(tline1{task_time_n+i,1}); %读取 task times
+            end
+             obj.Task_time            = Task_time(:,2:end);
+             obj.lineperf             = lineperf.cycleTimeAverage;
+             tline1{end_n,:}          = strrep(tline1{end_n,:},tline1{end_n,:},' ');
+             tline1{end_n+1,:}        = '<line performance>';
+             tline1{end_n+2,:}        = ['fitness:',num2str(fitness),'  ','cycleTime:',num2str(lineperf.cycleTimeAverage),...
+                                                '  ','designCost:',num2str(DC),'  ','finalNormDesCost:',num2str(NDC)];
+             tline1{end_n+3,:}        = strrep(tline1{end_n,:},tline1{end_n,:},' ');
+             tline1{end_n+4,:}        = '<line config>';
+             for j = 1:size(lineconfi,1)
+                 tline1{end_n+4+j,:}    =  num2str(lineconfi(j,:));
+             end
+             tline1{end_n+5+size(lineconfi,1),:}         = strrep(tline1{end_n,:},tline1{end_n,:},' ');
+             tline1{end_n+6+size(lineconfi,1),:}         = '<plan>';
+             for j = 1:size(plan,2)
+                 tline1{end_n+6+size(lineconfi,1)+j,:}    =  num2str(plan{1,j}');
+             end
+             tline1{end_n+7+size(lineconfi,1)+size(plan,2),:}     = '<end>';
+             for i = 1:Task_N
+                Task_time1(i,:)        = str2num(tline1{task_time_n+i,:}); %读取 task times
+%                 obj.Ave_f(i,:)        = str2num(tline1{average_force_n+i,1});% 读取 average force
+%                 obj.Task_freq(i,:)    = str2num(tline1{frequency_tasks_n+i,1});% 读取 frequency tasks
+%                 obj.Se_pos(i,:)       = str2num(tline1{severe_postures_n+i,1});% 读取 severe postures
+%                 obj.Mi_pos(i,:)       = str2num(tline1{mild_postures_n+i,1});% 读取 mild postures
+%                 obj.Add_fac(i,:)      = str2num(tline1{additional_factor_n+i,1});% 读取 additional factor
+%                 obj.Rep_act(i,:)      = str2num(tline1{repetitive_actions_n+i,1});% 读取 repetitive actions
+% %                 obj.Parallel_coe(i,:) = str2num(tline1{end_n+i+1,1});% 读取 Parallel coefficient
+             end
+             obj.Task_time            = Task_time1(:,2:end);
+              fclose(ffid);   
+              fid = fopen(varargin{1,1},'wt');
+              for k=1:length(tline1)
+                  fprintf(fid,'%s\n',tline1{k});              %将newline内的内容逐行写出
+              end
+              fclose(fid);
+        end 
+    end
+end
